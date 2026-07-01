@@ -25,6 +25,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
+  outputDir: 'test-results',
   /* Opt out of parallel tests on CI. */
   // workers: process.env.CI ? 1 : undefined,
   /* Global Test Timeout */ 
@@ -37,14 +38,16 @@ export default defineConfig({
   // reporter: 'html',
   reporter: [
           ['html'],
-          ["line"], ["allure-playwright"]
+          // ["line"], ["allure-playwright"]
+          ['allure-playwright', { resultsDir: 'allure-results' }],
+          ['github'], 
     ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     // headless: false,
     headless: process.env.HEADLESS === 'false',
-    // screenshot: "on",
-    // video: "on",
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
     /* Base URL to use in actions like `await page.goto('/')`. */
     // baseURL: 'https://ecommerce-playground.lambdatest.io/index.php?',
     baseURL: process.env.BASE_URL,
