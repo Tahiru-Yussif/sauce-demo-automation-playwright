@@ -1,8 +1,0 @@
-"BROKEN","EPIC","FAILED","FEATURE","PASSED","SKIPPED","STORY","UNKNOWN"
-"0","","0","","7","0","","0"
-"0","","0","Authentication","2","0","Valid Login","0"
-"0","","0","Authentication","4","0","Invalid Login","0"
-"0","Authentication","4","Login","0","0","Invalid Login","0"
-"0","","0","Authentication","1","0","Locked User Login","0"
-"0","Authentication","0","Login","1","0","Valid Login","0"
-"0","Authentication","1","Login","0","0","Locked User","0"
