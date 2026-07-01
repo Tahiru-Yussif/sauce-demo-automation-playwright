@@ -1,44 +1,63 @@
-import { Locator, Page } from '@playwright/test';
+import { Locator, Page, expect } from '@playwright/test';
+import { ROUTES } from '../tests/constants/routes';
+import { TIMEOUTS } from '../tests/constants/timeout';
 
 export default class LoginPage {
-    private readonly personUsername: Locator;
-    private readonly personPassword: Locator;
-    private readonly loginButton: Locator;
-    private readonly productDetailsPage: Locator;
-    private readonly LoginErrorMessage: Locator;
+    readonly usernameInput: Locator;
+    readonly passwordInput: Locator;
+    readonly loginButton: Locator;
+    readonly inventoryContainer: Locator;
+    readonly errorMessage: Locator;
 
     constructor(public readonly page: Page) {
-        this.personUsername = page.getByTestId("username");
-        this.personPassword = page.getByTestId("password");
+        this.usernameInput = page.getByTestId("username");
+        this.passwordInput = page.getByTestId("password");
         this.loginButton = page.getByTestId("login-button");
-        this.productDetailsPage = page.getByTestId("inventory-container")
-        this.LoginErrorMessage = this.page.getByTestId('error');
+        this.inventoryContainer = page.getByTestId("inventory-container");
+        this.errorMessage = page.getByTestId('error');
     }
 
+    // ========== Actions ==========
     async login(username: string, password: string): Promise<void> {
-        await this.username(username);
-        await this.password(password);
+        await this.enterUsername(username);
+        await this.enterPassword(password);
         await this.clickLoginBtn();
+        await this.inventoryContainer.waitFor({ timeout: TIMEOUTS.MEDIUM});
     }
 
-    async username(username: string): Promise<void> {
-        await this.personUsername.fill(username);
+    async loginExpectingError(username: string, password: string): Promise<void> {
+        await this.enterUsername(username);
+        await this.enterPassword(password);
+        await this.clickLoginBtn();
+        await this.errorMessage.waitFor({ timeout: TIMEOUTS.MEDIUM});
     }
 
-    async password(password: string): Promise<void> {
-        await this.personPassword.fill(password);
+    // ========== Private Helpers ==========
+    private async enterUsername(username: string): Promise<void> {
+        await this.usernameInput.fill(username);
     }
 
-    async clickLoginBtn(): Promise<void> {
+    private async enterPassword(password: string): Promise<void> {
+        await this.passwordInput.fill(password);
+    }
+
+    private async clickLoginBtn(): Promise<void> {
         await this.loginButton.click();
     }
 
-    isProductPageDisplayed() {
-        return this.productDetailsPage;
+    // ========== Assertions (Playwright style) ==========
+    async shouldShowError(expectedError: string): Promise<void> {
+        await expect(this.errorMessage).toBeVisible();
+        await expect(this.errorMessage).toContainText(expectedError);
     }
 
-    errorMessage() {
-        return this.LoginErrorMessage;
+    async shouldStayOnLoginPage(): Promise<void> {
+        await expect.soft(this.page).toHaveURL(ROUTES.LOGIN);
+        await expect.soft(this.inventoryContainer).not.toBeVisible();
     }
 
+    async shouldNavigateToInventory(): Promise<void> {
+        await expect(this.inventoryContainer).toBeVisible();
+        await expect(this.page).toHaveURL(ROUTES.INVENTORY);
+    }
 }

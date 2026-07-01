@@ -1,75 +1,96 @@
 import { test, expect } from '../../fixtures/auth.fixture';
-// import { test, expect } from '../../fixtures/productPage.fixture';
 import { config } from "../../config";
+import testData from "../../test-data/login.json" with { type: "json" };
 import { SortOption } from '../../enum/productSortingEnums.enum';
 
 test.describe('Product Sorting', () => {
-    test.beforeEach(async ( { page, baseURL, loginPage }) => {
-        await page.goto(`${baseURL}`);
-        await loginPage.login(config.standardUsername, config.standardPassword);
-    })
 
-    test("Sorting Product items A-Z", async ({ productSortingPage }) => {
-        await productSortingPage.selectSortOption(SortOption.NAME_A_TO_Z);
+    test.beforeEach(async ( { page, context, loginPage }) => {
+        await context.clearCookies();
+        await page.goto('/');
+        await loginPage.login(testData.validUser.username, testData.validUser.password);
+    });
 
-         // Get actual product names after sorting
-        const actualProducts = await productSortingPage.getAllProductNames();
+test.describe('Name sorting', () => {
+    test('should sort product items A-Z @smoke', async ({ productSortingPage }) => {
 
-         // Create expected sorted array
-        const expectedProducts = [...actualProducts].sort((a, b) => 
-            a.localeCompare(b, 'en', { sensitivity: 'base' })
-        );
-        
-         // Assert
-        expect(actualProducts).toEqual(expectedProducts);
-        
-         // Additional assertion: Verify first and last items
-        expect(actualProducts[0]).toBe(expectedProducts[0]);
-        expect(actualProducts[actualProducts.length - 1]).toBe(
-            expectedProducts[expectedProducts.length - 1]
-        );
-    })
+            await test.step('Select A-Z sort option', async () => {
+                await productSortingPage.selectSortOption(SortOption.NAME_A_TO_Z);
+            });
 
-    test("Sorting Product items Z-A", async ({ productSortingPage }) => {
-        await productSortingPage.selectSortOption(SortOption.NAME_Z_TO_A);
-
-         // Get actual product names after sorting
-        const actualProducts = await productSortingPage.getAllProductNames();
-
-         // Create expected sorted array
-        const expectedProducts = [...actualProducts].sort((a, b) => 
-            b.localeCompare(a, 'en', { sensitivity: 'base' })
-        );
-
-         // Assert
-        expect(actualProducts).toEqual(expectedProducts);
-    })
-
-    test("Sorting Product Price(low to high)", async ({ productSortingPage }) => {
-        await productSortingPage.selectSortOption(SortOption.PRICE_LOW_TO_HIGH);
-
-         // Get actual product names after sorting
-        const actualPrices = await productSortingPage.getAllProductPrices();
-
-         // Create expected sorted array
-        const expectedPrices = [...actualPrices].sort((a, b) => a - b);
+            let actualProducts: string[];
+            let expectedProducts: string[];
+            await test.step('Verify products are sorted correctly', async () => {
+                actualProducts = await productSortingPage.getAllProductNames();
+                expectedProducts = [...actualProducts].sort((a, b) => 
+                    a.localeCompare(b, 'en', { sensitivity: 'base' })
+                );
+            });
                 
-        //  // Assert
-        expect(actualPrices).toEqual(expectedPrices);
-    })
+            await test.step("Validate products are sorted A-Z", async () => {
+                expect(actualProducts.length).toBeGreaterThan(0);
+                expect(actualProducts).toEqual(expectedProducts);
+            });
+        });
+
+    test('should sort product items Z-A', async ({ productSortingPage }) => {
+            await test.step('Select Z-A sort option', async () => {
+                await productSortingPage.selectSortOption(SortOption.NAME_Z_TO_A);
+            });
+
+            let actualProducts: string[];
+            let expectedProducts: string[];
+            await test.step('Verify products are sorted correctly', async () => {
+                actualProducts = await productSortingPage.getAllProductNames();
+                expectedProducts = [...actualProducts].sort((a, b) => 
+                    b.localeCompare(a, 'en', { sensitivity: 'base' })
+                );
+            });
+
+                await test.step("Validate products are sorted Z-A", async () => {
+                    expect(actualProducts.length).toBeGreaterThan(0);
+                    expect(actualProducts).toEqual(expectedProducts);
+                });
+            });
+});
+
+    test.describe('Price Sorting', () => {
+        test("should sort product prices low to high @smoke", async ({ productSortingPage }) => {
+
+            await test.step("Select price low → high sorting", async () => {
+                await productSortingPage.selectSortOption(SortOption.PRICE_LOW_TO_HIGH);
+            });
+
+            let actualPrices: number[];
+            let expectedPrices: number[];
+            await test.step('Verify products are sorted correctly', async () => {
+                actualPrices = await productSortingPage.getAllProductPrices();
+                expectedPrices = [...actualPrices].sort((a, b) => a - b);
+            });
+
+            await test.step("Validate prices are sorted ascending", async () => {
+                expect(actualPrices).toEqual(expectedPrices);
+        });
+    });
 
     test("Sorting Product Price(high to low)", async ({ productSortingPage }) => {
-        await productSortingPage.selectSortOption(SortOption.PRICE_HIGH_TO_LOW);
 
-         // Get actual product names after sorting
-        const actualPrices = await productSortingPage.getAllProductPrices();
+        await test.step("Select price high → low sorting", async () => {
+            await productSortingPage.selectSortOption(SortOption.PRICE_HIGH_TO_LOW);
+        });
 
-         // Create expected sorted array
-        const expectedPrices = [...actualPrices].sort((a, b) => b - a);
+        let actualPrices: number[];
+        let expectedPrices: number[];
+        await test.step('Verify products are sorted correctly', async () => {
+            actualPrices = await productSortingPage.getAllProductPrices();
+            expectedPrices = [...actualPrices].sort((a, b) => b - a);
+        });
                 
-        //  // Assert
-        expect(actualPrices).toEqual(expectedPrices);
-    })
+        await test.step("Validate prices are sorted descending", async () => {
+            expect(actualPrices).toEqual(expectedPrices);
+        });
+    });
+});
 
     test('Should sort products within acceptable time', async ({ productSortingPage }) => {
         // Get start execution start time.
@@ -84,4 +105,4 @@ test.describe('Product Sorting', () => {
         // Assert sorting completes within 2 seconds
         expect(duration).toBeLessThan(config.responseTime);
     });
-})
+});
